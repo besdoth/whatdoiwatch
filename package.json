@@ -7,9 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "cf:build": "next build && wrangler pages deploy",
     "pages:build": "npx @cloudflare/next-on-pages",
-    "preview": "npx @cloudflare/next-on-pages && wrangler pages dev"
+    "preview": "npx @cloudflare/next-on-pages && npx wrangler pages dev"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",
@@ -27,7 +26,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "wrangler": "^4.101.0"
+    "typescript": "^5"
   }
 }
