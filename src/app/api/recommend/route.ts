@@ -76,8 +76,9 @@ Return raw JSON only, no markdown, no explanation.`;
   });
 
   if (!res.ok) {
+    const body = await res.text();
     return NextResponse.json(
-      { error: "Claude API error" },
+      { error: `Claude API error ${res.status}: ${body}` },
       { status: 500 }
     );
   }
