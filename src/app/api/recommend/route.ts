@@ -2,10 +2,7 @@ export const runtime = "edge";
 
 import { auth } from "@/auth";
 import { getWatchHistory, getUserRatings } from "@/lib/trakt";
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
-
-const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -23,7 +20,6 @@ export async function POST(req: NextRequest) {
     getUserRatings(session.accessToken, session.traktUsername),
   ]);
 
-  // Merge ratings into history
   const enriched = history.map((item) => ({
     ...item,
     rating: ratings[item.title] ?? null,
@@ -65,20 +61,34 @@ Mix shows and movies. Prioritize variety. Don't recommend things they've already
 
 Return raw JSON only, no markdown, no explanation.`;
 
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: prompt }],
+    }),
   });
 
-  const text =
-    message.content[0].type === "text" ? message.content[0].text : "";
+  if (!res.ok) {
+    return NextResponse.json(
+      { error: "Claude API error" },
+      { status: 500 }
+    );
+  }
+
+  const data = await res.json() as { content: { type: string; text: string }[] };
+  const text = data.content[0]?.type === "text" ? data.content[0].text : "";
 
   let recommendations;
   try {
     recommendations = JSON.parse(text);
   } catch {
-    // Try to extract JSON if Claude added any wrapping text
     const match = text.match(/\[[\s\S]*\]/);
     if (match) {
       recommendations = JSON.parse(match[0]);

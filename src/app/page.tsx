@@ -38,8 +38,8 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
       setRecommendations(data.recommendations);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }

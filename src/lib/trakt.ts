@@ -1,5 +1,4 @@
 const TRAKT_API = "https://api.trakt.tv";
-const TMDB_IMG = "https://image.tmdb.org/t/p/w500";
 
 function traktHeaders(accessToken: string) {
   return {
@@ -39,7 +38,7 @@ export async function getWatchHistory(
 
   const showItems: WatchedItem[] = (Array.isArray(shows) ? shows : [])
     .slice(0, 30)
-    .map((s: any) => ({
+    .map((s: { show?: { title?: string; year?: number; genres?: string[] }; plays?: number }) => ({
       type: "show" as const,
       title: s.show?.title ?? "Unknown",
       year: s.show?.year ?? null,
@@ -50,7 +49,7 @@ export async function getWatchHistory(
 
   const movieItems: WatchedItem[] = (Array.isArray(movies) ? movies : [])
     .slice(0, 20)
-    .map((m: any) => ({
+    .map((m: { movie?: { title?: string; year?: number; genres?: string[] }; plays?: number }) => ({
       type: "movie" as const,
       title: m.movie?.title ?? "Unknown",
       year: m.movie?.year ?? null,
@@ -76,7 +75,8 @@ export async function getUserRatings(
   ]);
 
   const ratings: Record<string, number> = {};
-  for (const item of [...(showRatings ?? []), ...(movieRatings ?? [])]) {
+  type RatingItem = { show?: { title?: string }; movie?: { title?: string }; rating: number };
+  for (const item of [...(showRatings ?? []), ...(movieRatings ?? [])] as RatingItem[]) {
     const title = item.show?.title ?? item.movie?.title;
     if (title) ratings[title] = item.rating;
   }
