@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import { auth } from "@/auth";
 import { getWatchHistory, getUserRatings } from "@/lib/trakt";
 import Anthropic from "@anthropic-ai/sdk";
