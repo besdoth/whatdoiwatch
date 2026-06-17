@@ -61,30 +61,28 @@ Mix shows and movies. Prioritize variety. Don't recommend things they've already
 
 Return raw JSON only, no markdown, no explanation.`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 1024 },
+      }),
+    }
+  );
 
   if (!res.ok) {
     const body = await res.text();
     return NextResponse.json(
-      { error: `Claude API error ${res.status}: ${body}` },
+      { error: `Gemini API error ${res.status}: ${body}` },
       { status: 500 }
     );
   }
 
-  const data = await res.json() as { content: { type: string; text: string }[] };
-  const text = data.content[0]?.type === "text" ? data.content[0].text : "";
+  const data = await res.json() as { candidates: { content: { parts: { text: string }[] } }[] };
+  const text = data.candidates[0]?.content?.parts[0]?.text ?? "";
 
   let recommendations;
   try {
