@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import RecommendationCard from "@/components/RecommendationCard";
 import MoodPicker from "@/components/MoodPicker";
 
@@ -14,13 +13,26 @@ export interface Recommendation {
   vibe: string;
 }
 
+interface Session {
+  accessToken: string;
+  username: string;
+  name: string;
+}
+
 export default function Home() {
-  const { data: session, status } = useSession();
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [mood, setMood] = useState("");
   const [customMood, setCustomMood] = useState("");
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((r) => r.json())
+      .then(setSession)
+      .catch(() => setSession(null));
+  }, []);
 
   const activeMood = mood === "custom" ? customMood : mood;
 
@@ -45,7 +57,7 @@ export default function Home() {
     }
   }
 
-  if (status === "loading") {
+  if (session === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -64,12 +76,12 @@ export default function Home() {
             Connect your Trakt account and tell us your mood. We&apos;ll figure out
             the rest.
           </p>
-          <button
-            onClick={() => signIn("trakt")}
-            className="bg-red-600 hover:bg-red-500 transition-colors text-white font-semibold px-8 py-3 rounded-xl text-lg"
+          <a
+            href="/api/auth/login"
+            className="inline-block bg-red-600 hover:bg-red-500 transition-colors text-white font-semibold px-8 py-3 rounded-xl text-lg"
           >
             Connect with Trakt
-          </button>
+          </a>
           <p className="text-neutral-600 text-sm mt-6">
             Your watch history stays private — it&apos;s only used to generate
             recommendations.
@@ -81,32 +93,28 @@ export default function Home() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
-      {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
             What Do I Watch?
           </h1>
           <p className="text-neutral-400 text-sm mt-1">
-            Hey {session.user?.name || session.traktUsername} — let&apos;s find
-            something good.
+            Hey {session.name} — let&apos;s find something good.
           </p>
         </div>
-        <button
-          onClick={() => signOut()}
+        <a
+          href="/api/auth/logout"
           className="text-neutral-500 hover:text-white text-sm transition-colors"
         >
           Sign out
-        </button>
+        </a>
       </div>
 
-      {/* Mood Picker */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold mb-4 text-neutral-200">
           What&apos;s the vibe right now?
         </h2>
         <MoodPicker selected={mood} onSelect={setMood} />
-
         {mood === "custom" && (
           <div className="mt-4">
             <input
@@ -121,7 +129,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Go button */}
       <button
         onClick={getRecommendations}
         disabled={!activeMood.trim() || loading}
@@ -130,26 +137,20 @@ export default function Home() {
         {loading ? "Finding something good..." : "Find me something to watch"}
       </button>
 
-      {/* Error */}
       {error && (
         <div className="bg-red-900/30 border border-red-700 text-red-300 rounded-xl p-4 mb-8">
           {error}
         </div>
       )}
 
-      {/* Loading skeleton */}
       {loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-neutral-900 rounded-2xl p-5 animate-pulse h-48"
-            />
+            <div key={i} className="bg-neutral-900 rounded-2xl p-5 animate-pulse h-48" />
           ))}
         </div>
       )}
 
-      {/* Results */}
       {!loading && recommendations.length > 0 && (
         <>
           <h2 className="text-lg font-semibold mb-4 text-neutral-300">

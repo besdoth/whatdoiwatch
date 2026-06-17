@@ -1,12 +1,12 @@
 export const runtime = "edge";
 
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { getWatchHistory, getUserRatings } from "@/lib/trakt";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.accessToken || !session?.traktUsername) {
+  const session = await getSession(req);
+  if (!session?.accessToken || !session?.username) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
   }
 
   const [history, ratings] = await Promise.all([
-    getWatchHistory(session.accessToken, session.traktUsername),
-    getUserRatings(session.accessToken, session.traktUsername),
+    getWatchHistory(session.accessToken, session.username),
+    getUserRatings(session.accessToken, session.username),
   ]);
 
   const enriched = history.map((item) => ({
