@@ -61,28 +61,29 @@ Mix shows and movies. Prioritize variety. Don't recommend things they've already
 
 Return raw JSON only, no markdown, no explanation.`;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 1024 },
-      }),
-    }
-  );
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "meta-llama/llama-3.3-70b-instruct:free",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 1024,
+    }),
+  });
 
   if (!res.ok) {
     const body = await res.text();
     return NextResponse.json(
-      { error: `Gemini API error ${res.status}: ${body}` },
+      { error: `AI API error ${res.status}: ${body}` },
       { status: 500 }
     );
   }
 
-  const data = await res.json() as { candidates: { content: { parts: { text: string }[] } }[] };
-  const text = data.candidates[0]?.content?.parts[0]?.text ?? "";
+  const data = await res.json() as { choices: { message: { content: string } }[] };
+  const text = data.choices[0]?.message?.content ?? "";
 
   let recommendations;
   try {
