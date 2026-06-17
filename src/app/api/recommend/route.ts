@@ -68,7 +68,7 @@ Return raw JSON only, no markdown, no explanation.`;
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.0-flash-exp:free",
+      model: "deepseek/deepseek-r1:free",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 1024,
     }),
