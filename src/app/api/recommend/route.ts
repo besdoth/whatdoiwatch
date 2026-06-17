@@ -68,7 +68,7 @@ Return raw JSON only, no markdown, no explanation.`;
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "mistralai/mistral-7b-instruct:free",
+      model: "openai/gpt-oss-120b:free",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 1024,
     }),
