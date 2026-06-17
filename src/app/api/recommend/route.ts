@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { mood } = await req.json();
+  const { mood } = await req.json() as { mood: string };
   if (!mood) {
     return NextResponse.json({ error: "Mood is required" }, { status: 400 });
   }

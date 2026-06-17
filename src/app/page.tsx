@@ -30,8 +30,14 @@ export default function Home() {
   useEffect(() => {
     fetch("/api/auth/session")
       .then((r) => r.json())
-      .then(setSession)
+      .then((s) => setSession(s as Session | null))
       .catch(() => setSession(null));
+    // Track visit
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ page: "/" }),
+    }).catch(() => {});
   }, []);
 
   const activeMood = mood === "custom" ? customMood : mood;
@@ -47,7 +53,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mood: activeMood }),
       });
-      const data = await res.json();
+      const data = await res.json() as { error?: string; recommendations: Recommendation[] };
       if (!res.ok) throw new Error(data.error || "Something went wrong");
       setRecommendations(data.recommendations);
     } catch (e) {
